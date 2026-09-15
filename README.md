@@ -1,6 +1,6 @@
 # System monitor
 
-A web dashboard that shows, in near real time, whether every part of [unified_broker_interface](../unified_broker_interface) (UBI) is healthy. It watches UBI's systemd services and daily jobs, broker logins, quote feeds, Redis streams, order and portfolio freshness, reference data, the data stores and the journal. It can restart a broken service from the browser and raises a desktop notification when something fails.
+A web dashboard that shows, in near real time, whether every part of [unified_broker_interface](https://github.com/pramodathani/unified_broker_interface) (UBI) is healthy. It watches UBI's systemd services and daily jobs, broker logins, quote feeds, Redis streams, order and portfolio freshness, reference data, the data stores and the journal. It can restart a broken service from the browser and raises a desktop notification when something fails.
 
 The monitor only reads UBI's data. It never writes to UBI's Redis, MongoDB or TimescaleDB, and it never logs in to UBI's REST API, because UBI allows one API session at a time and `tradingmachine` uses it.
 
@@ -39,7 +39,7 @@ Ten collectors run on their own intervals (5 seconds to 5 minutes) and judge eac
    ```bash
    bin/system-monitor
    ```
-   Open `http://localhost:8090` on this machine, or `http://<network-address>:8090` from another device on the network.
+   Open `http://localhost:8090` on this machine, or `http://<network-address>:8090` from another device on the network, where `<network-address>` is the first address printed by `hostname -I`.
 5. Install it as a user service so it starts with your session:
    ```bash
    systemctl --user link ~/Projects/system_monitor/services/system-monitor.service
