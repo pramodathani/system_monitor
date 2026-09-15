@@ -1,0 +1,17 @@
+[Unit]
+Description=System monitor dashboard for unified_broker_interface
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/system_monitor
+ExecStart=%h/Projects/system_monitor/bin/system-monitor
+Environment=PYTHONUNBUFFERED=1
+SyslogIdentifier=system-monitor
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target
