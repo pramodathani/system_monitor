@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 import argon2
 import fastapi.testclient
 
+from system_monitor.alerts.alert_policy import AlertPolicy
 from system_monitor.application import Application
 from system_monitor.checks.check_result import (
     CheckArea,
@@ -13,6 +14,7 @@ from system_monitor.checks.check_result import (
     CollectionOutcome,
 )
 from system_monitor.configuration.settings import Settings
+from system_monitor.configuration.thresholds import AlertThresholds
 from system_monitor.controls.unit_controller import UnitController
 from system_monitor.security.authenticator import Authenticator
 from system_monitor.sources.journal_client import JournalEntry
@@ -99,7 +101,20 @@ class TestRoutes:
         controller = UnitController(systemd_client, inventory, clock)
         application = Application(settings)
         web_application = application.create_web_application(
-            snapshot_builder=DashboardSnapshot(state, controller, MarketCalendar(None, clock), clock),
+            snapshot_builder=DashboardSnapshot(
+                state,
+                controller,
+                AlertPolicy(
+                    AlertThresholds(
+                        consecutive_failures=2,
+                        cooldown_seconds=600,
+                        group_threshold=3,
+                    ),
+                    clock,
+                ),
+                MarketCalendar(None, clock),
+                clock,
+            ),
             controller=controller,
             authenticator=Authenticator(_HASH, clock),
             inventory=inventory,

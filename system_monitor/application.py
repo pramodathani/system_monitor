@@ -8,12 +8,15 @@ Typical usage example:
 import asyncio
 import contextlib
 import logging
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator
 
 import fastapi
 import starlette.middleware.sessions
 import uvicorn
 
+from system_monitor.alerts.alert_dispatcher import AlertDispatcher
+from system_monitor.alerts.alert_policy import AlertPolicy
+from system_monitor.alerts.desktop_notifier import DesktopNotifier
 from system_monitor.collectors.data_stores_collector import DataStoresCollector
 from system_monitor.collectors.feeds_collector import FeedsCollector
 from system_monitor.collectors.log_errors_collector import LogErrorsCollector
@@ -54,10 +57,7 @@ from system_monitor.sources.redis_reader import RedisReader
 from system_monitor.sources.rest_api_probe import RestApiProbe
 from system_monitor.sources.systemd_client import SystemdClient
 from system_monitor.sources.unit_inventory import UnitInventory
-from system_monitor.state.collector_scheduler import (
-    CollectorScheduler,
-    ResultListener,
-)
+from system_monitor.state.collector_scheduler import CollectorScheduler
 from system_monitor.state.dashboard_snapshot import DashboardSnapshot
 from system_monitor.state.monitor_state import MonitorState
 from system_monitor.utilities.clock import SystemClock
@@ -86,6 +86,7 @@ class Application:
         self.clock = SystemClock()
         self.inventory = None
         self.scheduler = None
+        self.alert_dispatcher = None
         self.mongo_connection = None
 
     def run(self) -> None:
@@ -151,29 +152,26 @@ class Application:
             LogErrorsCollector(journal_client, self.inventory, thresholds.logs, self.clock),
         ]
         state = MonitorState(self.clock)
-        self.scheduler = CollectorScheduler(collectors, state, self.result_listeners(thresholds))
+        alert_policy = AlertPolicy(thresholds.alerts, self.clock)
+        self.scheduler = CollectorScheduler(
+            collectors,
+            state,
+            [
+                alert_policy,
+            ],
+        )
+        notifier = DesktopNotifier(command_runner, self.settings.desktop_notifications_enabled)
+        self.alert_dispatcher = AlertDispatcher(alert_policy, notifier)
         controller = UnitController(systemd_client, self.inventory, self.clock)
 
         return self.create_web_application(
-            snapshot_builder=DashboardSnapshot(state, controller, market_calendar, self.clock),
+            snapshot_builder=DashboardSnapshot(state, controller, alert_policy, market_calendar, self.clock),
             controller=controller,
             authenticator=Authenticator(self.settings.password_hash, self.clock),
             inventory=self.inventory,
             journal_follower=JournalFollower(journal_client),
             with_lifespan=True,
         )
-
-    def result_listeners(self, thresholds: Thresholds) -> Sequence[ResultListener]:
-        """Lists the objects that receive every batch of results.
-
-        Args:
-            thresholds (Thresholds): The loaded thresholds.
-
-        Returns:
-            Sequence[ResultListener]: The listeners; none yet.
-        """
-        del thresholds
-        return []
 
     def create_web_application(
         self,
@@ -239,10 +237,15 @@ class Application:
         await asyncio.to_thread(self.inventory.refresh)
         _LOGGER.info('Found %d units under %d targets.', len(self.inventory.units()), len(self.inventory.subjects()))
         scheduler_task = asyncio.create_task(self.scheduler.run())
+        dispatcher_task = asyncio.create_task(self.alert_dispatcher.run())
         try:
             yield
         finally:
-            scheduler_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await scheduler_task
+            for task in (
+                scheduler_task,
+                dispatcher_task,
+            ):
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
             self.mongo_connection.close()
