@@ -23,8 +23,11 @@ class PasswordSetup:
         """Asks for the password twice and prints the .env lines.
 
         Returns:
-            int: 0 on success, 1 when the passwords differ or are too short.
+            int: 0 on success, 1 when the passwords differ or are too short, 2 when there is no terminal to type into.
         """
+        if not sys.stdin.isatty():
+            print('bin/set-password needs a terminal to type the password into; open a terminal window and run it there.', file=sys.stderr)
+            return 2
         password = getpass.getpass('New dashboard password: ')
         repeated = getpass.getpass('Repeat the password: ')
         if password != repeated:
