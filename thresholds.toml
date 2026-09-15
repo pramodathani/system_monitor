@@ -1,0 +1,49 @@
+[services]
+restart_window_seconds = 900
+
+[feeds]
+warning_age_seconds = 45
+failure_age_seconds = 120
+grace_after_open_seconds = 300
+
+[feeds.broker_overrides.stoxkart]
+warning_age_seconds = 300
+failure_age_seconds = 900
+
+[quotes_pipeline]
+stats_failure_age_seconds = 30
+stale_scan_interval_seconds = 30
+
+[streams]
+warning_lag_fraction = 0.05
+failure_lag_fraction = 0.5
+pending_warning = 1000
+
+[streams.caps]
+broker_quotes = 100000
+broker_order_updates = 20000
+broker_positions_updates = 20000
+unified_quotes = 200000
+unified_order_updates = 50000
+unified_positions_updates = 50000
+
+[portfolio]
+warning_age_seconds = 60
+failure_age_seconds = 300
+holdings_warning_age_seconds = 180
+holdings_failure_age_seconds = 600
+
+[reference_data]
+expected_by = "09:00"
+
+[data_stores]
+slow_warning_milliseconds = 250
+timeout_seconds = 3
+
+[logs]
+window_seconds = 900
+
+[alerts]
+consecutive_failures = 2
+cooldown_seconds = 600
+group_threshold = 3
