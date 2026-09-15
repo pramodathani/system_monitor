@@ -37,6 +37,21 @@ class TextFormatter:
         return f'{days} d {remaining_hours} h'
 
     @staticmethod
+    def count(amount: int, noun: str) -> str:
+        """Writes a number with a noun in the right singular or plural form.
+
+        Args:
+            amount (int): The number.
+            noun (str): The singular noun, made plural by adding "s".
+
+        Returns:
+            str: Text such as "1 error" or "15 errors".
+        """
+        if amount == 1:
+            return f'1 {noun}'
+        return f'{amount} {noun}s'
+
+    @staticmethod
     def india_time(epoch: float, now: float) -> str:
         """Describes a moment in India time, adding the date when it is not today.
 

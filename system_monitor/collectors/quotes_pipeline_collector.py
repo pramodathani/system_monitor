@@ -129,7 +129,7 @@ class QuotesPipelineCollector(BaseCollector):
             message = f'The pipeline statistics are {age_text}; bin/unified/quotes may be stuck.'
         elif undecodable_increase > 0:
             status = CheckStatus.WARNING
-            message = f'{undecodable_increase} ticks could not be decoded since the last reading.'
+            message = f'{TextFormatter.count(undecodable_increase, "tick")} could not be decoded since the last reading.'
         elif written_rate is not None and received_rate is not None:
             status = CheckStatus.OK
             message = f'{written_rate:.1f} quotes/s written from {received_rate:.1f} ticks/s received.'

@@ -140,10 +140,10 @@ class LogErrorsCollector(BaseCollector):
             }
             if errors > 0:
                 status = CheckStatus.WARNING
-                message = f'{errors} errors and {warnings} warnings in the last {window_text}.'
+                message = f'{TextFormatter.count(errors, "error")} and {TextFormatter.count(warnings, "warning")} in the last {window_text}.'
             elif warnings > 0:
                 status = CheckStatus.OK
-                message = f'{warnings} warnings in the last {window_text}.'
+                message = f'{TextFormatter.count(warnings, "warning")} in the last {window_text}.'
             else:
                 status = CheckStatus.OK
                 message = f'No warnings or errors in the last {window_text}.'

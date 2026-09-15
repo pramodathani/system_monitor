@@ -145,7 +145,7 @@ class ServicesCollector(BaseCollector):
             message = f'The unit file is not loaded ({load_state or "unknown"}).'
         elif is_running and recent_restarts > 0:
             status = CheckStatus.WARNING
-            message = f'Running, but restarted {recent_restarts} times in the last {window_text}.'
+            message = f'Running, but restarted {TextFormatter.count(recent_restarts, "time")} in the last {window_text}.'
         elif is_running:
             status = CheckStatus.OK
             if uptime is None:
