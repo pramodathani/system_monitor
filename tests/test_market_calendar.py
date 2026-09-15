@@ -166,3 +166,18 @@ class TestMarketCalendar:
         """
         moment = FixedClock.at_india_time(2026, 9, 13, 12, 0).now()
         assert self._calendar().seconds_since_open(moment) is None
+
+    def test_calendar_keys_limit_open_check(self):
+        """Checks that an NSE-only feed sees markets closed during the MCX evening session.
+
+        Raises:
+            AssertionError: The selection was ignored.
+        """
+        calendar = self._calendar()
+        evening = FixedClock.at_india_time(2026, 9, 15, 19, 0).now()
+        nse_only = {
+            ('nse', 'equity'),
+        }
+        assert calendar.is_market_open(evening)
+        assert not calendar.is_market_open(evening, nse_only)
+        assert calendar.seconds_since_open(evening, nse_only) is None

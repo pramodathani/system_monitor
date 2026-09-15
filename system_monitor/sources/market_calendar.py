@@ -17,6 +17,7 @@ import datetime
 import logging
 import threading
 import zoneinfo
+from collections.abc import Collection
 from typing import Any
 
 import pymongo.errors
@@ -175,11 +176,16 @@ class MarketCalendar:
                 windows.extend(self._calendar_windows(document, exchange, calendar, calendar_hours, day))
         return windows
 
-    def open_windows(self, epoch: float) -> list[SessionWindow]:
+    def open_windows(
+        self,
+        epoch: float,
+        calendar_keys: Collection[tuple[str, str]] | None = None,
+    ) -> list[SessionWindow]:
         """Lists the sessions open at a moment.
 
         Args:
             epoch (float): The moment, in epoch seconds.
+            calendar_keys (Collection[tuple[str, str]] | None): The (exchange, calendar) pairs to consider, or None for every calendar.
 
         Returns:
             list[SessionWindow]: The sessions whose window contains the moment.
@@ -187,36 +193,50 @@ class MarketCalendar:
         day = TimestampParser.india_date(epoch)
         open_windows = []
         for window in self.windows_for_day(day):
+            if not self._is_selected(window, calendar_keys):
+                continue
             if window.opens_at <= epoch < window.closes_at:
                 open_windows.append(window)
         return open_windows
 
-    def is_market_open(self, epoch: float) -> bool:
-        """Checks whether any session of any exchange is open.
+    def is_market_open(
+        self,
+        epoch: float,
+        calendar_keys: Collection[tuple[str, str]] | None = None,
+    ) -> bool:
+        """Checks whether any session is open.
 
         Args:
             epoch (float): The moment, in epoch seconds.
+            calendar_keys (Collection[tuple[str, str]] | None): The (exchange, calendar) pairs to consider, or None for every calendar.
 
         Returns:
-            bool: True when at least one session is open.
+            bool: True when at least one selected session is open.
         """
-        return bool(self.open_windows(epoch))
+        return bool(self.open_windows(epoch, calendar_keys))
 
-    def seconds_since_open(self, epoch: float) -> float | None:
+    def seconds_since_open(
+        self,
+        epoch: float,
+        calendar_keys: Collection[tuple[str, str]] | None = None,
+    ) -> float | None:
         """Measures how long markets have been continuously open.
 
         Sessions of one calendar that follow each other without a gap, such as the commodity morning and evening sessions, count as one open period.
 
         Args:
             epoch (float): The moment, in epoch seconds.
+            calendar_keys (Collection[tuple[str, str]] | None): The (exchange, calendar) pairs to consider, or None for every calendar.
 
         Returns:
-            float | None: Seconds since the earliest continuous open period began, or None when no session is open.
+            float | None: Seconds since the earliest continuous open period began, or None when no selected session is open.
         """
         day = TimestampParser.india_date(epoch)
         windows = self.windows_for_day(day)
         earliest_start = None
         for window in windows:
+            if not self._is_selected(window, calendar_keys):
+                continue
             if not window.opens_at <= epoch < window.closes_at:
                 continue
             start = self._continuous_start(window, windows)
@@ -246,6 +266,24 @@ class MarketCalendar:
             if window.exchange == exchange and window.calendar == calendar:
                 return True
         return False
+
+    def _is_selected(
+        self,
+        window: SessionWindow,
+        calendar_keys: Collection[tuple[str, str]] | None,
+    ) -> bool:
+        """Checks whether a session belongs to the selected calendars.
+
+        Args:
+            window (SessionWindow): The session.
+            calendar_keys (Collection[tuple[str, str]] | None): The (exchange, calendar) pairs to consider, or None for every calendar.
+
+        Returns:
+            bool: True when no selection was given or the session's pair is in it.
+        """
+        if calendar_keys is None:
+            return True
+        return (window.exchange, window.calendar) in calendar_keys
 
     def _calendar_windows(
         self,

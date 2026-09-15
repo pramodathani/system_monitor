@@ -38,7 +38,9 @@ class TestLogLineParser:
         """
         parser = LogLineParser()
         parser.parse(_UNIT, '2026-09-15 07:06:21 INFO     zerodha.quotes socket_0 opened')
-        assert parser.parse(_UNIT, 'Traceback (most recent call last):').level == 'ERROR'
+        traceback_start = parser.parse(_UNIT, 'Traceback (most recent call last):')
+        assert traceback_start.level == 'ERROR'
+        assert not traceback_start.is_continuation
         continuation = parser.parse(_UNIT, '  File "bin/zerodha/quotes", line 10, in <module>')
         assert continuation.level == 'ERROR'
         assert continuation.is_continuation

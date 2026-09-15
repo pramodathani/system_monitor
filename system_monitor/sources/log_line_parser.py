@@ -35,7 +35,7 @@ class ParsedLogLine:
         level: One of DEBUG, INFO, WARNING, ERROR or CRITICAL.
         logger_name: The Python logger that wrote the record, or None for a continuation line.
         text: The whole line as written.
-        is_continuation: True when the line had no log prefix and took the previous record's level.
+        is_continuation: True when the line had no log prefix and took the previous record's level. A traceback's first line starts a record of its own.
     """
 
     level: str
@@ -73,6 +73,12 @@ class LogLineParser:
             )
         if message.startswith(_TRACEBACK_START):
             self._last_level_by_unit[unit_name] = 'ERROR'
+            return ParsedLogLine(
+                level='ERROR',
+                logger_name=None,
+                text=message,
+                is_continuation=False,
+            )
         level = self._last_level_by_unit.get(unit_name, 'INFO')
         return ParsedLogLine(
             level=level,
