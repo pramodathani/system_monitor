@@ -5,6 +5,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { UnitActionButton } from '../components/UnitActionButton';
 import { CheckIndex } from '../utilities/checkIndex';
 import { Formatter } from '../utilities/formatter';
+import { ServiceOrder } from '../utilities/serviceOrder';
 import { RecentActions } from './OverviewPage';
 
 /** Props for ServicesPage. */
@@ -113,7 +114,7 @@ export function ServicesPage(props: ServicesPageProps) {
       </section>
 
       {shownSubjects.map((subject) => {
-        const services = index.forSubject(subject, ['services']).filter(keep);
+        const services = new ServiceOrder(subject).sort(index.forSubject(subject, ['services']).filter(keep));
         if (services.length === 0) {
           return null;
         }
