@@ -9,7 +9,7 @@ class TestUnitInventory:
     """Tests for UnitInventory."""
 
     def _inventory(self, tmp_path) -> UnitInventory:
-        """Builds an inventory over a fake services directory with zerodha, kotak and unified.
+        """Builds an inventory over a fake services directory with zerodha, kotak, databases and unified.
 
         kotak's target has no members, as if it were not installed.
 
@@ -23,6 +23,7 @@ class TestUnitInventory:
             'zerodha',
             'unified',
             'kotak',
+            'databases',
         ):
             (tmp_path / name).mkdir()
         (tmp_path / 'README.md').write_text('not a subject')
@@ -54,20 +55,30 @@ class TestUnitInventory:
             ],
             'kotak.target\n',
         )
+        runner.add_response(
+            [
+                'systemctl',
+                '--user',
+                'list-dependencies',
+                'databases.target',
+            ],
+            'databases.target\n  databases.service\n  databases.timer\n',
+        )
         inventory = UnitInventory(SystemdClient(runner), tmp_path)
         inventory.refresh()
         return inventory
 
     def test_refresh_orders_subjects_unified_last(self, tmp_path):
-        """Checks the subject order and the broker list.
+        """Checks the subject order and that the broker list leaves out databases and unified.
 
         Raises:
-            AssertionError: The order is wrong.
+            AssertionError: The order is wrong or a non-broker subject is listed as a broker.
         """
         inventory = self._inventory(tmp_path)
         assert inventory.subjects() == [
             'kotak',
             'zerodha',
+            'databases',
             'unified',
         ]
         assert inventory.brokers() == [
@@ -87,6 +98,20 @@ class TestUnitInventory:
         assert inventory.find('zerodha-historical-prices.service').kind == UnitKind.PERIODIC
         assert inventory.find('zerodha@quotes.service').kind == UnitKind.LONG_RUNNING
         assert inventory.find('unified-rest-api.service').subject == 'unified'
+
+    def test_refresh_keeps_database_units(self, tmp_path):
+        """Checks that the database units are still watched, under their own subject.
+
+        Raises:
+            AssertionError: A database unit is missing or has the wrong subject or kind.
+        """
+        inventory = self._inventory(tmp_path)
+        service = inventory.find('databases.service')
+        timer = inventory.find('databases.timer')
+        assert service.subject == 'databases'
+        assert service.kind == UnitKind.SCHEDULED
+        assert timer.subject == 'databases'
+        assert timer.kind == UnitKind.TIMER
 
     def test_refresh_records_missing_targets(self, tmp_path):
         """Checks that a target with no members is reported.

@@ -1,6 +1,6 @@
 """The list of UBI's systemd units the monitor expects to exist.
 
-The subjects are the folder names under UBI's `services/` directory, such as "zerodha" and "unified", and each subject's units are the members of its systemd target, such as `zerodha.target`. Reading the targets rather than listing running units means a unit that stopped or was never started still appears, as a failure.
+The subjects are the folder names under UBI's `services/` directory, such as "zerodha", "databases" and "unified", and each subject's units are the members of its systemd target, such as `zerodha.target`. Reading the targets rather than listing running units means a unit that stopped or was never started still appears, as a failure.
 
 Typical usage example:
 
@@ -18,6 +18,7 @@ from pathlib import Path
 from system_monitor.sources.systemd_client import SystemdClient
 
 UNIFIED_SUBJECT = 'unified'
+DATABASES_SUBJECT = 'databases'
 
 
 class UnitKind(enum.StrEnum):
@@ -35,7 +36,7 @@ class InventoryUnit:
 
     Attributes:
         name: The full unit name, such as "zerodha@quotes.service".
-        subject: The broker name, or "unified".
+        subject: The broker name, "databases" or "unified".
         kind: How the unit is expected to behave.
     """
 
@@ -139,7 +140,7 @@ class UnitInventory:
         return self.find(unit_name) is not None
 
     def subjects(self) -> list[str]:
-        """Lists every subject, brokers first and "unified" last.
+        """Lists every subject: brokers first, then "databases", then "unified".
 
         Returns:
             list[str]: The subject names.
@@ -151,12 +152,15 @@ class UnitInventory:
         """Lists the broker subjects.
 
         Returns:
-            list[str]: Every subject except "unified".
+            list[str]: Every subject except "databases" and "unified".
         """
         brokers = []
         for subject in self.subjects():
-            if subject != UNIFIED_SUBJECT:
-                brokers.append(subject)
+            if subject == UNIFIED_SUBJECT:
+                continue
+            if subject == DATABASES_SUBJECT:
+                continue
+            brokers.append(subject)
         return brokers
 
     def missing_targets(self) -> list[str]:
@@ -172,7 +176,7 @@ class UnitInventory:
         """Reads the subject names from UBI's services directory.
 
         Returns:
-            list[str]: The broker folder names sorted, followed by "unified" when present.
+            list[str]: The broker folder names sorted, followed by "databases" and then "unified" when present.
 
         Raises:
             FileNotFoundError: The services directory does not exist.
@@ -180,15 +184,20 @@ class UnitInventory:
         if not self.services_directory.is_dir():
             raise FileNotFoundError(f'UBI services directory not found: {self.services_directory}')
         brokers = []
+        has_databases = False
         has_unified = False
         for path in self.services_directory.iterdir():
             if not path.is_dir():
                 continue
             if path.name == UNIFIED_SUBJECT:
                 has_unified = True
+            elif path.name == DATABASES_SUBJECT:
+                has_databases = True
             else:
                 brokers.append(path.name)
         subjects = sorted(brokers)
+        if has_databases:
+            subjects.append(DATABASES_SUBJECT)
         if has_unified:
             subjects.append(UNIFIED_SUBJECT)
         return subjects

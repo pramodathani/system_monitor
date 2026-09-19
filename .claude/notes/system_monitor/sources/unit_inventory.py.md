@@ -8,6 +8,12 @@ The subjects come from the folder names under UBI's `services/` directory, which
 
 A target that does not exist still makes `list-dependencies` exit 0 and print only its own name, so "no members" is treated as "target missing".
 
+## Why "databases" is a subject but not a broker
+
+On 2026-09-19 UBI added `services/databases/`, holding `databases.target`, `databases.service` and `databases.timer`, which run `docker compose up -d --wait` every minute to bring back any stopped Redis, MongoDB or TimescaleDB container. Every other folder under `services/` except `unified` is a broker, so without a special case the inventory listed `databases` as an eleventh broker. The sessions collector then looked for `databases:session:status` and the reference data collector for `databases:instruments:meta`, and both reported a false failure, because those two loop over `brokers()` without first checking that the broker has the matching service.
+
+`databases` therefore stays in `subjects()`, so its units are watched and the Services page still lists them with their start and restart buttons, but it is left out of `brokers()`. Filing the units under the `platform` subject, next to the Docker container checks, was considered and rejected: the front end hides `platform` from the per-subject lists on the Services and Overview pages, so the units would have disappeared from the dashboard.
+
 ## The unit kinds
 
 | Kind | Rule | Why it matters |
