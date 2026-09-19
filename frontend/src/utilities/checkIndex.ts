@@ -114,6 +114,25 @@ export class CheckIndex {
   }
 
   /**
+   * Lists the subjects that have at least one check in some areas, in the same order as subjects().
+   * @param areas The areas to look in.
+   * @returns The matching subjects.
+   */
+  subjectsInAreas(areas: string[]): string[] {
+    const present = new Set<string>();
+    for (const check of this.inAreas(areas)) {
+      present.add(check.subject);
+    }
+    const matching: string[] = [];
+    for (const subject of this.subjects()) {
+      if (present.has(subject)) {
+        matching.push(subject);
+      }
+    }
+    return matching;
+  }
+
+  /**
    * Lists checks that need attention, worst first and longest-standing first within a status.
    * @returns The failing, warning and unknown checks.
    */

@@ -48,7 +48,7 @@ export function PipelinePage(props: PipelinePageProps) {
               </tr>
             </thead>
             <tbody>
-              {index.subjects().map((subject) => (
+              {index.subjectsInAreas(['portfolio']).map((subject) => (
                 <tr key={subject}>
                   <th scope="row">{subject}</th>
                   {DATASETS.map((dataset) => {
