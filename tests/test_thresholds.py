@@ -34,7 +34,9 @@ class TestThresholds:
         assert loaded.feeds.default_limits.warning_age_seconds == 45
         assert loaded.feeds.limits_for('stoxkart').failure_age_seconds == 900
         assert loaded.feeds.limits_for('zerodha').failure_age_seconds == 120
-        assert loaded.streams.cap_for('broker_quotes') == 100000
+        assert loaded.streams.cap_for('broker_quotes') == 1000000
+        assert loaded.streams.cap_for('unified_quotes') == 1000000
+        assert loaded.streams.cap_for('broker_order_updates') == 20000
         assert loaded.reference_data.expected_by == datetime.time(9, 0)
         assert loaded.alerts.consecutive_failures == 2
 

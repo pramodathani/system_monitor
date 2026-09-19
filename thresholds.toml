@@ -20,10 +20,10 @@ failure_lag_fraction = 0.5
 pending_warning = 1000
 
 [streams.caps]
-broker_quotes = 100000
+broker_quotes = 1000000
 broker_order_updates = 20000
 broker_positions_updates = 20000
-unified_quotes = 200000
+unified_quotes = 1000000
 unified_order_updates = 50000
 unified_positions_updates = 50000
 
