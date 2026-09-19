@@ -6,10 +6,10 @@ import { Formatter } from '../utilities/formatter';
 
 const DATASETS = [
   'orders',
-  'positions',
   'trades',
-  'funds',
   'holdings',
+  'positions',
+  'funds',
 ];
 
 /** Props for PipelinePage. */
