@@ -74,7 +74,7 @@ class MongodbHealth:
             database_statistics (dict[str, Any]): The dbStats reply.
 
         Returns:
-            list[dict[str, Any]]: One entry per reading, each with "group", "name" and "value".
+            list[dict[str, Any]]: One entry per reading, each with "group", "name", "value" and "kind", where "kind" is None because none of these readings is a moment.
         """
         connections = server_status.get('connections') or {}
         network = server_status.get('network') or {}
@@ -102,6 +102,7 @@ class MongodbHealth:
                     'group': group,
                     'name': name,
                     'value': value,
+                    'kind': None,
                 },
             )
         return parameters

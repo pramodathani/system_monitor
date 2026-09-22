@@ -106,7 +106,7 @@ export interface StoreHealth {
   version: string | null;
   started_at: number | null;
   uptime_seconds: number | null;
-  parameters: Array<{ group: string; name: string; value: unknown }>;
+  parameters: Array<{ group: string; name: string; value: unknown; kind: string | null }>;
   container: {
     name: string;
     state: string;

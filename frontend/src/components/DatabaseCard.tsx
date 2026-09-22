@@ -80,7 +80,7 @@ export function DatabaseCard(props: DatabaseCardProps) {
                     <tr key={reading.name}>
                       <th scope="row">{reading.name}</th>
                       <td className={typeof reading.value === 'number' ? 'numeric' : undefined}>
-                        {readingText(reading.value)}
+                        {readingText(reading.value, reading.kind, now)}
                       </td>
                     </tr>
                   ))}
@@ -97,7 +97,7 @@ export function DatabaseCard(props: DatabaseCardProps) {
 /** One heading of readings within a store's card. */
 interface ParameterGroup {
   name: string;
-  readings: Array<{ name: string; value: unknown }>;
+  readings: Array<{ name: string; value: unknown; kind: string | null }>;
 }
 
 /**
@@ -113,19 +113,29 @@ function groupParameters(store: StoreHealth): ParameterGroup[] {
       group = { name: parameter.group, readings: [] };
       groups.push(group);
     }
-    group.readings.push({ name: parameter.name, value: parameter.value });
+    group.readings.push({ name: parameter.name, value: parameter.value, kind: parameter.kind });
   }
   return groups;
 }
 
 /**
  * The text one reading shows.
+ *
+ * A reading of kind "epoch" is a moment rather than a quantity, and is shown as a time. Redis
+ * reports its last snapshot as epoch seconds, and 1,790,076,654 tells a reader nothing that
+ * "11:53" does not tell them better.
  * @param value Whatever the store reported.
+ * @param kind The reading's kind, which is "epoch" for a moment and null for a plain value.
+ * @param now The time the reading was taken, used to decide how much of the date to show.
  * @returns A readable rendering, with large numbers grouped and a missing value shown as a dash.
  */
-function readingText(value: unknown): string {
+function readingText(value: unknown, kind: string | null, now: number): string {
   if (value === null || value === undefined) {
     return '—';
+  }
+  if (kind === 'epoch') {
+    const moment = Number(value);
+    return Number.isNaN(moment) ? String(value) : Formatter.indiaTime(moment, now);
   }
   if (typeof value === 'number') {
     return Formatter.number(value);

@@ -175,7 +175,7 @@ class TimescaledbHealth:
             statistics (tuple[Any, ...] | None): The `pg_stat_database` row, or None when there is none.
 
         Returns:
-            list[dict[str, Any]]: One entry per reading, each with "group", "name" and "value".
+            list[dict[str, Any]]: One entry per reading, each with "group", "name", "value" and "kind", where "kind" is None because none of these readings is a moment.
         """
         commits, rollbacks, blocks_read, blocks_hit, deadlocks = statistics or (
             None,
@@ -204,6 +204,7 @@ class TimescaledbHealth:
                     'group': group,
                     'name': name,
                     'value': value,
+                    'kind': None,
                 },
             )
         return parameters
