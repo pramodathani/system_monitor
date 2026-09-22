@@ -34,9 +34,31 @@ frontend/                  ── React pages that only colour and arrange Check
 
 All judgement (ok, warning, failure, idle, unknown) happens in Python collectors, so it can be unit tested. The front end never decides a status.
 
+The live view page is the one part that does not work this way. It reads on demand rather than from the collectors' state, because it shows the stored values themselves rather than a judgement about them.
+
+```
+Redis keys / store health / UBI GET endpoints
+        │
+        ▼
+live/view_catalogue.py     ── declares every readable key; the browser names a tab, never a key
+live/api_catalogue.py      ── declares every callable UBI endpoint, GET only
+        │
+        ▼
+live/*.py                  ── one reader per kind: document, hash field, hash of documents, row table, store health
+        │
+        ▼
+routes/live_routes.py      ── /api/live/catalogue, /api/live/databases, /api/live/view/{scope}/{name}, /api/live/table/{scope}/{name}, /api/live/api/{name}
+        │
+        ▼
+frontend/src/pages/LiveViewPage.tsx
+```
+
 ## Rules that are easy to break
 
-- **Never call UBI's `/api/session/connect`.** UBI allows one token for the whole application and `tradingmachine` holds it. The monitor only calls the unauthenticated `GET /api/`.
+- **Never call UBI's `/api/session/connect`.** UBI allows one token for the whole application and `tradingmachine` holds it. Connecting would mint a second token and revoke the one in use. The collectors call only the unauthenticated `GET /api/`; the live view's API tab calls UBI's GET endpoints by reusing the token already in `last_login` field `unified_broker_interface`, which creates no session.
+- **`ApiCatalogue` holds GET endpoints only.** That is what keeps `POST /api/orders/place`, `PUT /api/orders/modify` and `DELETE /api/orders/cancel` unreachable from the monitor. Never add a non-GET endpoint to it.
+- **The live view never takes a Redis key or a URL from the browser.** A tab name goes through `ViewCatalogue` and an endpoint name through `ApiCatalogue`. A chosen broker is checked against `UnitInventory.brokers()` before it fills a placeholder in a key.
+- **The live view shows documents verbatim, tokens included.** The rule below about `CheckResult` still stands; it does not extend to the live view, which exists to show exactly what Redis holds.
 - **Never write to UBI's Redis, MongoDB or TimescaleDB.** Every source client is read-only.
 - **Never put an access token in a CheckResult.** Session documents carry `access-token`; copy only the fields you need.
 - **UBI's journal priority is always 6.** Its logs go through `logging.basicConfig` to stdout, so the level must be parsed from the message text by `sources/log_line_parser.py`.
