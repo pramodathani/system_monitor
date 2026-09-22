@@ -1,3 +1,12 @@
+import type {
+  ApiCallResult,
+  DatabaseHealth,
+  LiveCatalogue,
+  LiveDocument,
+  LiveHashDocuments,
+  LiveTablePage,
+  LiveViewAnswer,
+} from './liveTypes';
 import type { Snapshot, UnitAction } from './types';
 
 const REQUESTED_WITH_HEADER = 'X-Requested-With';
@@ -101,6 +110,107 @@ export class ApiClient {
    */
   logStreamUrl(unitName: string, lineCount: number): string {
     return `/api/logs/${encodeURIComponent(unitName)}/events?lines=${lineCount}`;
+  }
+
+  /**
+   * Fetches the live view's list of brokers, tabs and UBI endpoints.
+   * @returns The catalogue.
+   * @throws ApiError when the server refuses.
+   */
+  async fetchLiveCatalogue(): Promise<LiveCatalogue> {
+    const response = await fetch('/api/live/catalogue', {
+      credentials: 'same-origin',
+    });
+    return (await this.readJson(response)) as unknown as LiveCatalogue;
+  }
+
+  /**
+   * Reads Redis, MongoDB and TimescaleDB and the containers they run in.
+   * @returns The health of all three.
+   * @throws ApiError when the server refuses.
+   */
+  async fetchDatabaseHealth(): Promise<DatabaseHealth> {
+    const response = await fetch('/api/live/databases', {
+      credentials: 'same-origin',
+    });
+    return (await this.readJson(response)) as unknown as DatabaseHealth;
+  }
+
+  /**
+   * Reads one live view tab that shows a document.
+   * @param scope Either "broker" or "unified".
+   * @param name The tab's name.
+   * @param broker The broker chosen, for a tab that needs one.
+   * @returns The tab and its value.
+   * @throws ApiError when the tab is unknown or a store could not be read.
+   */
+  async fetchLiveView(
+    scope: string,
+    name: string,
+    broker: string | null,
+  ): Promise<LiveViewAnswer<LiveDocument | LiveHashDocuments>> {
+    const query = new URLSearchParams();
+    if (broker !== null) {
+      query.set('broker', broker);
+    }
+    const response = await fetch(`/api/live/view/${scope}/${name}?${query.toString()}`, {
+      credentials: 'same-origin',
+    });
+    return (await this.readJson(response)) as unknown as LiveViewAnswer<LiveDocument | LiveHashDocuments>;
+  }
+
+  /**
+   * Reads one page of a live view table, or searches the whole table.
+   * @param scope Either "broker" or "unified".
+   * @param name The tab's name.
+   * @param broker The broker chosen, for a table that needs one.
+   * @param cursor The cursor to continue from, where "0" starts at the beginning.
+   * @param limit How many rows to ask for.
+   * @param search Text to look for in every row, or null to page through instead.
+   * @returns The tab and its page of rows.
+   * @throws ApiError when the tab is unknown or Redis could not be read.
+   */
+  async fetchLiveTable(
+    scope: string,
+    name: string,
+    broker: string | null,
+    cursor: string,
+    limit: number,
+    search: string | null,
+  ): Promise<LiveViewAnswer<LiveTablePage>> {
+    const query = new URLSearchParams();
+    query.set('cursor', cursor);
+    query.set('limit', String(limit));
+    if (broker !== null) {
+      query.set('broker', broker);
+    }
+    if (search !== null && search !== '') {
+      query.set('search', search);
+    }
+    const response = await fetch(`/api/live/table/${scope}/${name}?${query.toString()}`, {
+      credentials: 'same-origin',
+    });
+    return (await this.readJson(response)) as unknown as LiveViewAnswer<LiveTablePage>;
+  }
+
+  /**
+   * Calls one of UBI's GET endpoints through the monitor and returns what it answered.
+   * @param name The endpoint's name, as the catalogue gives it.
+   * @param parameters The query parameters to send, where empty values are left out.
+   * @returns The call's outcome, including a failing status rather than throwing on one.
+   * @throws ApiError when the endpoint is unknown to the monitor.
+   */
+  async callUbiApi(name: string, parameters: Record<string, string>): Promise<ApiCallResult> {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(parameters)) {
+      if (value.trim() !== '') {
+        query.set(key, value.trim());
+      }
+    }
+    const response = await fetch(`/api/live/api/${encodeURIComponent(name)}?${query.toString()}`, {
+      credentials: 'same-origin',
+    });
+    return (await this.readJson(response)) as unknown as ApiCallResult;
   }
 
   /**

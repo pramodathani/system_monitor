@@ -6,6 +6,7 @@ import type { Snapshot } from './api/types';
 import { StatusIcon } from './components/StatusBadge';
 import { useMonitorSnapshot } from './hooks/useMonitorSnapshot';
 import { useNow } from './hooks/useNow';
+import { LiveViewPage } from './pages/LiveViewPage';
 import { LoginPage } from './pages/LoginPage';
 import { LogsPage } from './pages/LogsPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -87,6 +88,7 @@ function Dashboard(props: DashboardProps) {
           <NavLink to="/services">Services</NavLink>
           <NavLink to="/feeds">Sessions & feeds</NavLink>
           <NavLink to="/pipeline">Pipeline</NavLink>
+          <NavLink to="/live">Live view</NavLink>
           <NavLink to="/logs">Logs</NavLink>
         </nav>
       </header>
@@ -99,6 +101,7 @@ function Dashboard(props: DashboardProps) {
             <Route path="/services" element={<ServicesPage snapshot={snapshot} />} />
             <Route path="/feeds" element={<SessionsAndFeedsPage snapshot={snapshot} />} />
             <Route path="/pipeline" element={<PipelinePage snapshot={snapshot} />} />
+            <Route path="/live" element={<LiveViewPage />} />
             <Route path="/logs" element={<LogsPage snapshot={snapshot} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
