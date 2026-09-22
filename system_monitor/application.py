@@ -39,9 +39,19 @@ from system_monitor.configuration.unified_broker_interface_configuration import 
     UnifiedBrokerInterfaceConfiguration,
 )
 from system_monitor.controls.unit_controller import UnitController
+from system_monitor.live.api_caller import ApiCaller
+from system_monitor.live.api_catalogue import ApiCatalogue
+from system_monitor.live.container_inspector import ContainerInspector
+from system_monitor.live.database_health import DatabaseHealth
+from system_monitor.live.live_view_reader import LiveViewReader
+from system_monitor.live.mongodb_health import MongodbHealth
+from system_monitor.live.redis_health import RedisHealth
+from system_monitor.live.timescaledb_health import TimescaledbHealth
+from system_monitor.live.view_catalogue import ViewCatalogue
 from system_monitor.routes.auth_routes import AuthRoutes
 from system_monitor.routes.control_routes import ControlRoutes
 from system_monitor.routes.frontend_routes import FrontendRoutes
+from system_monitor.routes.live_routes import LiveRoutes
 from system_monitor.routes.log_routes import LogRoutes
 from system_monitor.routes.snapshot_routes import SnapshotRoutes
 from system_monitor.security.authenticator import Authenticator
@@ -163,6 +173,7 @@ class Application:
         notifier = DesktopNotifier(command_runner, self.settings.desktop_notifications_enabled)
         self.alert_dispatcher = AlertDispatcher(alert_policy, notifier)
         controller = UnitController(systemd_client, self.inventory, self.clock)
+        api_catalogue = ApiCatalogue()
 
         return self.create_web_application(
             snapshot_builder=DashboardSnapshot(state, controller, alert_policy, market_calendar, self.clock),
@@ -171,6 +182,24 @@ class Application:
             inventory=self.inventory,
             journal_follower=JournalFollower(journal_client),
             with_lifespan=True,
+            live_routes=LiveRoutes(
+                LiveViewReader(redis_reader, ViewCatalogue(), self.inventory),
+                DatabaseHealth(
+                    RedisHealth(redis_reader),
+                    MongodbHealth(self.mongo_connection),
+                    TimescaledbHealth(configuration, timeout_seconds),
+                    ContainerInspector(command_runner),
+                    self.clock,
+                ),
+                api_catalogue,
+                ApiCaller(
+                    api_catalogue,
+                    redis_reader,
+                    configuration.rest_api_url,
+                    thresholds.live_view.api_timeout_seconds,
+                ),
+                SessionGuard(),
+            ),
         )
 
     def create_web_application(
@@ -181,6 +210,7 @@ class Application:
         inventory: UnitInventory,
         journal_follower: JournalFollower,
         with_lifespan: bool,
+        live_routes: LiveRoutes | None = None,
     ) -> fastapi.FastAPI:
         """Assembles the FastAPI application from ready components.
 
@@ -193,6 +223,7 @@ class Application:
             inventory (UnitInventory): The units whose logs may be read.
             journal_follower (JournalFollower): Follows a unit's journal.
             with_lifespan (bool): Whether startup should refresh the inventory and start the collectors.
+            live_routes (LiveRoutes | None): The live view's routes, or None to leave the page's routes unmounted. They are left out by tests that have no live stores to read.
 
         Returns:
             fastapi.FastAPI: The web application.
@@ -220,6 +251,8 @@ class Application:
         web_application.include_router(SnapshotRoutes(snapshot_builder, guard).router)
         web_application.include_router(LogRoutes(inventory, journal_follower, guard).router)
         web_application.include_router(ControlRoutes(controller, guard).router)
+        if live_routes is not None:
+            web_application.include_router(live_routes.router)
         web_application.include_router(FrontendRoutes(self.settings.frontend_directory).router)
         return web_application
 
