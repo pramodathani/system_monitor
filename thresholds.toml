@@ -43,6 +43,9 @@ timeout_seconds = 3
 [logs]
 window_seconds = 900
 
+[live_view]
+api_timeout_seconds = 30
+
 [alerts]
 consecutive_failures = 2
 cooldown_seconds = 600

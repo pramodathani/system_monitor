@@ -265,6 +265,17 @@ class LogThresholds:
 
 
 @dataclasses.dataclass(frozen=True)
+class LiveViewThresholds:
+    """Limits for the live view page's on-demand reads.
+
+    Attributes:
+        api_timeout_seconds: How long a call to UBI's REST API may take before it is abandoned.
+    """
+
+    api_timeout_seconds: float
+
+
+@dataclasses.dataclass(frozen=True)
 class AlertThresholds:
     """Limits for desktop notifications.
 
@@ -292,6 +303,7 @@ class Thresholds:
         reference_data: Limits for the instruments, mapping and prices checks.
         data_stores: Limits for the data store checks.
         logs: Limits for the journal error counts.
+        live_view: Limits for the live view page's on-demand reads.
         alerts: Limits for desktop notifications.
     """
 
@@ -303,6 +315,7 @@ class Thresholds:
     reference_data: ReferenceDataThresholds
     data_stores: DataStoreThresholds
     logs: LogThresholds
+    live_view: LiveViewThresholds
     alerts: AlertThresholds
 
     @classmethod
@@ -347,6 +360,7 @@ class Thresholds:
         reference_data = cls._section(document, 'reference_data')
         data_stores = cls._section(document, 'data_stores')
         logs = cls._section(document, 'logs')
+        live_view = cls._section(document, 'live_view')
         alerts = cls._section(document, 'alerts')
 
         broker_overrides = {}
@@ -400,6 +414,9 @@ class Thresholds:
             ),
             logs=LogThresholds(
                 window_seconds=logs.number('window_seconds'),
+            ),
+            live_view=LiveViewThresholds(
+                api_timeout_seconds=live_view.number('api_timeout_seconds'),
             ),
             alerts=AlertThresholds(
                 consecutive_failures=alerts.whole_number('consecutive_failures'),
