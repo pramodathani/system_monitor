@@ -172,7 +172,7 @@ export function ServicesPage(props: ServicesPageProps) {
                               action={stopped ? 'start' : 'restart'}
                               buttonLabel={stopped ? 'Start' : 'Restart'}
                               warning={
-                                unitName.includes('@order') || unitName.includes('persist')
+                                unitName.includes('-orders@') || unitName.includes('@store_')
                                   ? 'This service handles orders or persistence. Updates that arrive while it restarts are picked up from its Redis stream afterwards.'
                                   : undefined
                               }

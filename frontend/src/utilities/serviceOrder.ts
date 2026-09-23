@@ -1,18 +1,18 @@
 import type { Check } from '../api/types';
 
 const ROLE_ORDER: string[] = [
-  'user-profile',
-  'orders',
-  'order_updates',
-  'persist_orders',
-  'trades',
-  'holdings',
-  'positions',
-  'persist_positions',
-  'funds',
+  'user@details',
+  'orders@api_order_details',
+  'orders@websocket_order_details',
+  'orders@store_orders_to_db',
+  'orders@api_trade_details',
+  'portfolio@holdings',
+  'portfolio@positions',
+  'portfolio@store_positions_to_db',
+  'portfolio@funds',
   'historical-prices',
-  'quotes',
-  'persist_ticks',
+  'instruments@websocket_quotes',
+  'instruments@store_quotes_to_db',
 ];
 
 /** Puts one broker's services in the order a person reads them. */
@@ -29,16 +29,14 @@ export class ServiceOrder {
 
   /**
    * Finds a service's role, the part of its name after the broker.
-   * @param check The service check, named like "dhan@orders" or "dhan-historical-prices".
-   * @returns The role, such as "orders" or "historical-prices".
+   * @param check The service check, named like "dhan-orders@api_order_details" or "dhan-historical-prices".
+   * @returns The role, such as "orders@api_order_details" or "historical-prices".
    */
   role(check: Check): string {
     const name = check.name.replace(/\.service$/, '');
-    for (const separator of ['@', '-']) {
-      const prefix = `${this.subject}${separator}`;
-      if (name.startsWith(prefix)) {
-        return name.slice(prefix.length);
-      }
+    const prefix = `${this.subject}-`;
+    if (name.startsWith(prefix)) {
+      return name.slice(prefix.length);
     }
     return name;
   }
