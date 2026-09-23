@@ -1,8 +1,10 @@
 """Checks the morning's reference data: each broker's instrument download, the unified mapping and the prices run.
 
+UBI's `unified-mapping.timer` fires at 07:45 India time every day, weekends and holidays included, because the brokers publish a master every day and a missed one can never be fetched again. Today's download and mapping are therefore expected every day, with no reference to the trading calendar.
+
 Typical usage example:
 
-  collector = ReferenceDataCollector(redis_reader, inventory, market_calendar, thresholds.reference_data, clock)
+  collector = ReferenceDataCollector(redis_reader, inventory, thresholds.reference_data, clock)
   outcome = collector.run_once()
 """
 
@@ -11,7 +13,6 @@ from typing import Any
 from system_monitor.checks.check_result import CheckArea, CheckResult, CheckStatus
 from system_monitor.collectors.base_collector import BaseCollector
 from system_monitor.configuration.thresholds import ReferenceDataThresholds
-from system_monitor.sources.market_calendar import MarketCalendar
 from system_monitor.sources.redis_reader import RedisReader
 from system_monitor.sources.unit_inventory import UNIFIED_SUBJECT, UnitInventory
 from system_monitor.utilities.clock import SystemClock
@@ -28,7 +29,6 @@ class ReferenceDataCollector(BaseCollector):
         self,
         redis_reader: RedisReader,
         inventory: UnitInventory,
-        market_calendar: MarketCalendar,
         thresholds: ReferenceDataThresholds,
         clock: SystemClock,
         interval_seconds: float = 300.0,
@@ -38,7 +38,6 @@ class ReferenceDataCollector(BaseCollector):
         Args:
             redis_reader (RedisReader): Reads the meta documents.
             inventory (UnitInventory): Supplies the broker names.
-            market_calendar (MarketCalendar): Says whether today is a trading day.
             thresholds (ReferenceDataThresholds): The time by which today's data should exist.
             clock (SystemClock): The source of the current time.
             interval_seconds (float): How long to wait between runs.
@@ -46,7 +45,6 @@ class ReferenceDataCollector(BaseCollector):
         super().__init__(interval_seconds, clock)
         self.redis_reader = redis_reader
         self.inventory = inventory
-        self.market_calendar = market_calendar
         self.thresholds = thresholds
 
     def collect(self) -> list[CheckResult]:
@@ -59,12 +57,10 @@ class ReferenceDataCollector(BaseCollector):
             redis.RedisError: Redis could not be read.
             ValueError: A document is not JSON.
         """
-        self.market_calendar.refresh_if_due()
         now = self.clock.now()
         moment = TimestampParser.india_datetime(now)
         today = moment.date().isoformat()
-        is_trading_day = self.market_calendar.is_trading_day('nse', 'equity', moment.date())
-        expected_now = is_trading_day and moment.time() >= self.thresholds.expected_by
+        expected_now = moment.time() >= self.thresholds.expected_by
 
         results = []
         for broker in self.inventory.brokers():

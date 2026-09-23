@@ -5,7 +5,6 @@ import datetime
 from system_monitor.checks.check_result import CheckStatus
 from system_monitor.collectors.reference_data_collector import ReferenceDataCollector
 from system_monitor.configuration.thresholds import ReferenceDataThresholds
-from system_monitor.sources.market_calendar import MarketCalendar
 from tests.fakes import FakeRedisReader, FakeUnitInventory, FixedClock
 
 
@@ -13,7 +12,7 @@ class TestReferenceDataCollector:
     """Tests for ReferenceDataCollector."""
 
     def _collect(self, reader: FakeRedisReader, clock: FixedClock) -> dict:
-        """Runs the collector for zerodha and unified with the built-in calendar.
+        """Runs the collector for zerodha and unified.
 
         Args:
             reader (FakeRedisReader): The prepared Redis contents.
@@ -25,17 +24,16 @@ class TestReferenceDataCollector:
         inventory = FakeUnitInventory(
             {
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                 ],
                 'unified': [
-                    'unified@quotes.service',
+                    'unified-instruments@websocket_quotes.service',
                 ],
             },
         )
         collector = ReferenceDataCollector(
             reader,
             inventory,
-            MarketCalendar(None, clock),
             ReferenceDataThresholds(expected_by=datetime.time(9, 0)),
             clock,
         )
@@ -85,7 +83,7 @@ class TestReferenceDataCollector:
         assert results['reference_data:unified:mapping'].status == CheckStatus.OK
 
     def test_collect_yesterday_fails_after_expected_time(self):
-        """Checks that yesterday's data fails at 11:00 but not at 08:00 on a trading day.
+        """Checks that yesterday's data fails at 11:00 but not at 08:00.
 
         Raises:
             AssertionError: A status is wrong.
@@ -96,13 +94,23 @@ class TestReferenceDataCollector:
         assert late['reference_data:zerodha:instruments'].status == CheckStatus.FAILURE
         assert early['reference_data:zerodha:instruments'].status == CheckStatus.OK
 
-    def test_collect_weekend_old_data_is_ok(self):
-        """Checks that Friday's data is fine on a Sunday.
+    def test_collect_weekend_stale_data_fails(self):
+        """Checks that Friday's data fails on a Sunday, because UBI maps every day.
 
         Raises:
             AssertionError: The status is wrong.
         """
         results = self._collect(self._reader('2026-09-11'), FixedClock.at_india_time(2026, 9, 13, 11, 0))
+        assert results['reference_data:unified:mapping'].status == CheckStatus.FAILURE
+
+    def test_collect_weekend_today_is_ok(self):
+        """Checks that Sunday's own download and mapping are ok on that Sunday.
+
+        Raises:
+            AssertionError: The status is wrong.
+        """
+        results = self._collect(self._reader('2026-09-13'), FixedClock.at_india_time(2026, 9, 13, 11, 0))
+        assert results['reference_data:zerodha:instruments'].status == CheckStatus.OK
         assert results['reference_data:unified:mapping'].status == CheckStatus.OK
 
     def test_collect_prices_failed_step_warns(self):

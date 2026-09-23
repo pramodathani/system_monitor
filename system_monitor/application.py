@@ -149,7 +149,7 @@ class Application:
             QuotesPipelineCollector(redis_reader, self.inventory, market_calendar, thresholds.quotes_pipeline, self.clock),
             StreamsCollector(redis_reader, self.inventory, thresholds.streams, self.clock),
             PortfolioFreshnessCollector(redis_reader, self.inventory, thresholds.portfolio, self.clock),
-            ReferenceDataCollector(redis_reader, self.inventory, market_calendar, thresholds.reference_data, self.clock),
+            ReferenceDataCollector(redis_reader, self.inventory, thresholds.reference_data, self.clock),
             DataStoresCollector(
                 redis_reader,
                 self.mongo_connection,
