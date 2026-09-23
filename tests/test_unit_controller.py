@@ -19,7 +19,7 @@ class TestUnitController:
         inventory = FakeUnitInventory(
             {
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                     'zerodha-login.service',
                     'zerodha-login.timer',
                 ],
@@ -35,10 +35,10 @@ class TestUnitController:
             AssertionError: The action was not run or not recorded.
         """
         controller, systemd_client = self._controller()
-        recorded = controller.perform('zerodha@quotes.service', 'restart', '192.0.2.5')
+        recorded = controller.perform('zerodha-instruments@websocket_quotes.service', 'restart', '192.0.2.5')
         assert recorded.succeeded
         assert systemd_client.actions == [
-            ('restart', 'zerodha@quotes.service'),
+            ('restart', 'zerodha-instruments@websocket_quotes.service'),
         ]
         assert controller.recent_actions()[0]['address'] == '192.0.2.5'
         assert controller.version == 1
@@ -52,9 +52,9 @@ class TestUnitController:
         controller, systemd_client = self._controller()
         for unit_name in (
             'ssh.service',
-            'zerodha@quotes',
+            'zerodha-instruments@websocket_quotes',
             'zerodha-login.timer',
-            'zerodha@quotes.service; rm -rf ~',
+            'zerodha-instruments@websocket_quotes.service; rm -rf ~',
         ):
             with pytest.raises(UnitNotAllowedError):
                 controller.perform(unit_name, 'restart', '192.0.2.5')
@@ -68,7 +68,7 @@ class TestUnitController:
         """
         controller, _systemd_client = self._controller()
         with pytest.raises(ValueError, match='stop'):
-            controller.perform('zerodha@quotes.service', 'stop', '192.0.2.5')
+            controller.perform('zerodha-instruments@websocket_quotes.service', 'stop', '192.0.2.5')
 
     def test_perform_records_systemctl_refusal(self):
         """Checks that a systemctl error is recorded as a failed action.

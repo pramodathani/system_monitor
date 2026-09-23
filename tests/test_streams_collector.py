@@ -35,10 +35,10 @@ class TestStreamsCollector:
         inventory = FakeUnitInventory(
             {
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                 ],
                 'unified': [
-                    'unified@quotes.service',
+                    'unified-instruments@websocket_quotes.service',
                 ],
             },
         )

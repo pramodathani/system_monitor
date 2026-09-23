@@ -3,7 +3,7 @@
 Typical usage example:
 
   follower = JournalFollower(journal_client)
-  async for entry in follower.follow('zerodha@quotes.service', 200):
+  async for entry in follower.follow('zerodha-instruments@websocket_quotes.service', 200):
       print(entry.message)
 """
 

@@ -2,6 +2,8 @@
 
 The subjects are the folder names under UBI's `services/` directory, such as "zerodha", "databases" and "unified", and each subject's units are the members of its systemd target, such as `zerodha.target`. Reading the targets rather than listing running units means a unit that stopped or was never started still appears, as a failure.
 
+Most units are instances of a template named after the subject and one of the folders UBI's scripts are grouped into, so `bin/zerodha/instruments/websocket_quotes` runs as `zerodha-instruments@websocket_quotes.service`. `has_script` is the one place that spelling is written down.
+
 Typical usage example:
 
   inventory = UnitInventory(systemd_client, Path('.../unified_broker_interface/services'))
@@ -35,7 +37,7 @@ class InventoryUnit:
     """One expected unit.
 
     Attributes:
-        name: The full unit name, such as "zerodha@quotes.service".
+        name: The full unit name, such as "zerodha-instruments@websocket_quotes.service".
         subject: The broker name, "databases" or "unified".
         kind: How the unit is expected to behave.
     """
@@ -138,6 +140,21 @@ class UnitInventory:
             bool: True when the unit was found under one of UBI's targets.
         """
         return self.find(unit_name) is not None
+
+    def has_script(self, subject: str, folder: str, script: str) -> bool:
+        """Checks whether a subject runs one of UBI's scripts as a unit.
+
+        UBI groups each subject's scripts into folders by subject matter, and one systemd template per folder runs them, so `bin/kotak/portfolio/holdings` is run by `kotak-portfolio@holdings.service`.
+
+        Args:
+            subject (str): The broker name or "unified".
+            folder (str): The folder under `bin/<subject>/`, such as "orders", "portfolio", "instruments" or "user".
+            script (str): The script inside that folder, such as "api_order_details".
+
+        Returns:
+            bool: True when the unit that runs the script is in the inventory.
+        """
+        return self.has_unit(f'{subject}-{folder}@{script}.service')
 
     def subjects(self) -> list[str]:
         """Lists every subject: brokers first, then "databases", then "unified".

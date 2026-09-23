@@ -31,12 +31,12 @@ class TestPortfolioFreshnessCollector:
         inventory = FakeUnitInventory(
             {
                 'kotak': [
-                    'kotak@orders.service',
-                    'kotak@funds.service',
-                    'kotak@holdings.service',
+                    'kotak-orders@api_order_details.service',
+                    'kotak-portfolio@funds.service',
+                    'kotak-portfolio@holdings.service',
                 ],
                 'unified': [
-                    'unified@positions.service',
+                    'unified-portfolio@positions.service',
                 ],
             },
         )

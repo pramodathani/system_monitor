@@ -7,7 +7,7 @@
 
 ## Why only datasets with a running service
 
-Not every broker runs every script (Kotak has no user-profile service, Stoxkart no persisters). Checking for a key whose writer does not exist would be permanently red, so each check is created only when `<broker>@<dataset>.service` is in the inventory.
+Not every broker runs every script (Kotak has no user details service, Stoxkart no position persister). Checking for a key whose writer does not exist would be permanently red, so each check is created only when the script that writes it is in the inventory, which `UnitInventory.has_script` answers. The orders check therefore depends on `bin/<broker>/orders/api_order_details`, the trades check on `api_trade_details`, and the positions, funds and holdings checks on the scripts of those names under `bin/<broker>/portfolio/`.
 
 ## Unified documents
 

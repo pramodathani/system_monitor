@@ -62,6 +62,7 @@ frontend/src/pages/LiveViewPage.tsx
 - **Never write to UBI's Redis, MongoDB or TimescaleDB.** Every source client is read-only.
 - **Never put an access token in a CheckResult.** Session documents carry `access-token`; copy only the fields you need.
 - **UBI's journal priority is always 6.** Its logs go through `logging.basicConfig` to stdout, so the level must be parsed from the message text by `sources/log_line_parser.py`.
+- **Never spell a UBI unit name out in a collector.** UBI's units are named `<subject>-<folder>@<script>.service`, after the folders its scripts live in, such as `zerodha-orders@api_order_details.service`. Ask `UnitInventory.has_script(subject, folder, script)` instead, because a name that no longer exists makes the check disappear silently rather than fail loudly. UBI renamed every one of these on 2026-09-22.
 - **Unit actions go through `UnitController`.** It accepts only `restart` and `start`, only on `.service` units that `UnitInventory` found under UBI's targets, always with `--no-block`, and never through a shell.
 - **uvicorn runs one worker.** State lives in memory.
 

@@ -4,7 +4,7 @@ The browser asks for a tab by name and never by key. That is deliberate: a route
 
 Each tab says how it should be read. A `document` is one string key holding a JSON document. A `hash_field` is one named field of a hash. A `hash_documents` is a hash with a JSON document in every field, small enough to send whole. A `table` is one of the three huge hashes of JSON array rows, which is paged and searched instead.
 
-Two tabs are worth explaining. The unified session status reads `unified:session:status`, which `bin/unified/login` writes and which is simply absent on a system where that script has not run; the application token the REST API actually authenticates with lives in the `last_login` hash instead, so it gets a tab of its own beside it. The broker mapping tab is a table because every broker's mappings share one hash of nearly two million fields.
+Two tabs are worth explaining. The unified session status reads `unified:session:status`, which `bin/unified/session/connect` writes and which is simply absent on a system where that script has not run; the application token the REST API actually authenticates with lives in the `last_login` hash instead, so it gets a tab of its own beside it. The broker mapping tab is a table because every broker's mappings share one hash of nearly two million fields.
 
 Typical usage example:
 
@@ -193,7 +193,7 @@ class ViewCatalogue:
                 'Session status',
                 _DOCUMENT,
                 'unified:session:status',
-                'The application\'s own session, written by `bin/unified/login`. It is absent when that script has never run.',
+                'The application\'s own session, written by `bin/unified/session/connect`. It is absent when that script has never run.',
                 needs_broker=False,
             ),
             self._view(

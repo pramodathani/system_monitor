@@ -74,7 +74,7 @@ class TestRoutes:
         inventory = FakeUnitInventory(
             {
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                 ],
             },
         )
@@ -150,8 +150,8 @@ class TestRoutes:
         client, systemd_client = self._client(tmp_path)
         assert client.get('/api/snapshot').status_code == 401
         assert client.get('/api/events').status_code == 401
-        assert client.get('/api/logs/zerodha@quotes.service/events').status_code == 401
-        assert client.post('/api/units/zerodha@quotes.service/restart', headers=_HEADERS).status_code == 401
+        assert client.get('/api/logs/zerodha-instruments@websocket_quotes.service/events').status_code == 401
+        assert client.post('/api/units/zerodha-instruments@websocket_quotes.service/restart', headers=_HEADERS).status_code == 401
         assert systemd_client.actions == []
         assert client.get('/api/auth/session').json() == {
             'authenticated': False,
@@ -214,17 +214,17 @@ class TestRoutes:
         """
         client, systemd_client = self._client(tmp_path)
         self._log_in(client)
-        assert client.post('/api/units/zerodha@quotes.service/restart').status_code == 403
+        assert client.post('/api/units/zerodha-instruments@websocket_quotes.service/restart').status_code == 403
         assert client.post('/api/units/ssh.service/restart', headers=_HEADERS).status_code == 403
-        assert client.post('/api/units/zerodha@quotes.service/stop', headers=_HEADERS).status_code == 400
+        assert client.post('/api/units/zerodha-instruments@websocket_quotes.service/stop', headers=_HEADERS).status_code == 400
         assert systemd_client.actions == []
-        response = client.post('/api/units/zerodha@quotes.service/restart', headers=_HEADERS)
+        response = client.post('/api/units/zerodha-instruments@websocket_quotes.service/restart', headers=_HEADERS)
         assert response.status_code == 200
         assert response.json()['succeeded']
         assert systemd_client.actions == [
-            ('restart', 'zerodha@quotes.service'),
+            ('restart', 'zerodha-instruments@websocket_quotes.service'),
         ]
-        assert client.get('/api/snapshot').json()['actions'][0]['unit'] == 'zerodha@quotes.service'
+        assert client.get('/api/snapshot').json()['actions'][0]['unit'] == 'zerodha-instruments@websocket_quotes.service'
 
     def test_log_route_streams_parsed_lines(self, tmp_path):
         """Checks that log lines arrive as events with levels, and foreign units are refused.
@@ -235,7 +235,7 @@ class TestRoutes:
         client, _systemd_client = self._client(tmp_path)
         self._log_in(client)
         assert client.get('/api/logs/ssh.service/events').status_code == 404
-        response = client.get('/api/logs/zerodha@quotes.service/events')
+        response = client.get('/api/logs/zerodha-instruments@websocket_quotes.service/events')
         assert response.status_code == 200
         assert response.headers['content-type'].startswith('text/event-stream')
         events = response.text.strip().split('\n\n')

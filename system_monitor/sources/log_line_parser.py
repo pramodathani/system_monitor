@@ -5,7 +5,7 @@ UBI logs through `logging.basicConfig` to standard output with the format "%(asc
 Typical usage example:
 
   parser = LogLineParser()
-  parsed = parser.parse('zerodha@quotes.service', message)
+  parsed = parser.parse('zerodha-instruments@websocket_quotes.service', message)
   if parsed.level == 'ERROR':
       ...
 """

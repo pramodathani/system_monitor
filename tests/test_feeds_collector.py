@@ -31,13 +31,13 @@ class TestFeedsCollector:
         inventory = FakeUnitInventory(
             {
                 'groww': [
-                    'groww@quotes.service',
+                    'groww-instruments@websocket_quotes.service',
                 ],
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                 ],
                 'kotak': [
-                    'kotak@orders.service',
+                    'kotak-orders@api_order_details.service',
                 ],
             },
         )

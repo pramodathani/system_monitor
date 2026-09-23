@@ -61,26 +61,26 @@ class PortfolioFreshnessCollector(BaseCollector):
         now = self.clock.now()
         results = []
         for broker in self.inventory.brokers():
-            if self.inventory.has_unit(f'{broker}@orders.service'):
+            if self.inventory.has_script(broker, 'orders', 'api_order_details'):
                 results.append(self._polled_at_check(broker, 'orders', 'Orders', f'{broker}:orders:orders:polled_at', now))
-            if self.inventory.has_unit(f'{broker}@positions.service'):
+            if self.inventory.has_script(broker, 'portfolio', 'positions'):
                 results.append(self._polled_at_check(broker, 'positions', 'Positions', f'{broker}:portfolio:positions:polled_at', now))
-            if self.inventory.has_unit(f'{broker}@trades.service'):
+            if self.inventory.has_script(broker, 'orders', 'api_trade_details'):
                 results.append(self._document_check(broker, 'trades', 'Trades', f'{broker}:orders:trades', now))
-            if self.inventory.has_unit(f'{broker}@funds.service'):
+            if self.inventory.has_script(broker, 'portfolio', 'funds'):
                 results.append(self._document_check(broker, 'funds', 'Funds', f'{broker}:portfolio:funds', now))
-            if self.inventory.has_unit(f'{broker}@holdings.service'):
+            if self.inventory.has_script(broker, 'portfolio', 'holdings'):
                 results.append(self._document_check(broker, 'holdings', 'Holdings', f'{broker}:portfolio:holdings', now))
 
-        if self.inventory.has_unit('unified@orders.service'):
+        if self.inventory.has_script(UNIFIED_SUBJECT, 'orders', 'api_order_details'):
             results.append(self._unified_check('orders', 'Orders', 'unified:orders:orders', now))
-        if self.inventory.has_unit('unified@trades.service'):
+        if self.inventory.has_script(UNIFIED_SUBJECT, 'orders', 'api_trade_details'):
             results.append(self._unified_check('trades', 'Trades', 'unified:orders:trades', now))
-        if self.inventory.has_unit('unified@positions.service'):
+        if self.inventory.has_script(UNIFIED_SUBJECT, 'portfolio', 'positions'):
             results.append(self._unified_check('positions', 'Positions', 'unified:portfolio:positions', now))
-        if self.inventory.has_unit('unified@funds.service'):
+        if self.inventory.has_script(UNIFIED_SUBJECT, 'portfolio', 'funds'):
             results.append(self._unified_check('funds', 'Funds', 'unified:portfolio:funds', now))
-        if self.inventory.has_unit('unified@holdings.service'):
+        if self.inventory.has_script(UNIFIED_SUBJECT, 'portfolio', 'holdings'):
             results.append(self._unified_check('holdings', 'Holdings', 'unified:portfolio:holdings', now))
         return results
 

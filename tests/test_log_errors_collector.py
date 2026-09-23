@@ -63,8 +63,8 @@ class TestLogErrorsCollector:
         inventory = FakeUnitInventory(
             {
                 'kotak': [
-                    'kotak@positions.service',
-                    'kotak@trades.service',
+                    'kotak-portfolio@positions.service',
+                    'kotak-orders@api_trade_details.service',
                     'kotak-login.timer',
                     'kotak-login.service',
                 ],
@@ -72,7 +72,7 @@ class TestLogErrorsCollector:
         )
         clock = FixedClock(10_000.0)
         journal = _FakeJournalClient()
-        unit = 'kotak@positions.service'
+        unit = 'kotak-portfolio@positions.service'
         journal.batches.append(
             [
                 self._entry(unit, 9_990, '2026-09-15 12:00:00 ERROR    kotak.positions Poll failed', 'c1'),
@@ -87,16 +87,16 @@ class TestLogErrorsCollector:
         for result in collector.collect():
             results[result.check_id] = result
         assert set(results) == {
-            'logs:kotak@positions.service',
-            'logs:kotak@trades.service',
+            'logs:kotak-portfolio@positions.service',
+            'logs:kotak-orders@api_trade_details.service',
             'logs:kotak-login.service',
         }
-        positions = results['logs:kotak@positions.service']
+        positions = results['logs:kotak-portfolio@positions.service']
         assert positions.status == CheckStatus.WARNING
         assert positions.details['errors'] == 2
         assert positions.details['warnings'] == 1
         assert positions.details['last_warning']['message'].endswith('Retrying')
-        assert results['logs:kotak@trades.service'].status == CheckStatus.OK
+        assert results['logs:kotak-orders@api_trade_details.service'].status == CheckStatus.OK
         assert journal.calls[0] == (None, 9_100.0)
 
         clock.advance(1000)
@@ -104,5 +104,5 @@ class TestLogErrorsCollector:
         for result in collector.collect():
             results[result.check_id] = result
         assert journal.calls[1][0] == 'c5'
-        assert results['logs:kotak@positions.service'].status == CheckStatus.OK
-        assert results['logs:kotak@positions.service'].details['errors'] == 0
+        assert results['logs:kotak-portfolio@positions.service'].status == CheckStatus.OK
+        assert results['logs:kotak-portfolio@positions.service'].details['errors'] == 0

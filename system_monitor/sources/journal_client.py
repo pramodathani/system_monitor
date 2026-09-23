@@ -24,7 +24,7 @@ class JournalEntry:
     """One line of the journal.
 
     Attributes:
-        unit: The user unit that wrote the line, such as "zerodha@quotes.service", or an empty string.
+        unit: The user unit that wrote the line, such as "zerodha-instruments@websocket_quotes.service", or an empty string.
         identifier: The syslog identifier, such as "zerodha-quotes", or an empty string.
         timestamp: When the journal received the line, in epoch seconds.
         message: The line's text.

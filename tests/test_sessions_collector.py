@@ -22,13 +22,13 @@ class TestSessionsCollector:
         inventory = FakeUnitInventory(
             {
                 'kotak': [
-                    'kotak@quotes.service',
+                    'kotak-instruments@websocket_quotes.service',
                 ],
                 'zerodha': [
-                    'zerodha@quotes.service',
+                    'zerodha-instruments@websocket_quotes.service',
                 ],
                 'unified': [
-                    'unified@quotes.service',
+                    'unified-instruments@websocket_quotes.service',
                 ],
             },
         )

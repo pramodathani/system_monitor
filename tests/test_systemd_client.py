@@ -22,13 +22,13 @@ class TestSystemdClient:
                 '--user',
                 'list-dependencies',
             ],
-            'stoxkart.target\n  stoxkart-login.service\n  stoxkart-login.timer\n  stoxkart@funds.service\n',
+            'stoxkart.target\n  stoxkart-login.service\n  stoxkart-login.timer\n  stoxkart-portfolio@funds.service\n',
         )
         members = SystemdClient(runner).list_target_members('stoxkart.target')
         assert members == [
             'stoxkart-login.service',
             'stoxkart-login.timer',
-            'stoxkart@funds.service',
+            'stoxkart-portfolio@funds.service',
         ]
 
     def test_show_units_parses_blocks_by_id(self):
@@ -91,13 +91,13 @@ class TestSystemdClient:
             AssertionError: The command is wrong.
         """
         runner = FakeCommandRunner()
-        SystemdClient(runner).run_unit_action('restart', 'unified@details.service')
+        SystemdClient(runner).run_unit_action('restart', 'unified-user@details.service')
         assert runner.calls[0] == [
             'systemctl',
             '--user',
             'restart',
             '--no-block',
-            'unified@details.service',
+            'unified-user@details.service',
         ]
 
     def test_run_unit_action_rejects_stop(self):

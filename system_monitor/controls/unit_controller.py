@@ -5,7 +5,7 @@ Only `start` and `restart` are possible, only on `.service` units found under UB
 Typical usage example:
 
   controller = UnitController(systemd_client, inventory, SystemClock())
-  action = controller.perform('unified@details.service', 'restart', '192.0.2.20')
+  action = controller.perform('unified-user@details.service', 'restart', '192.0.2.20')
 """
 
 import collections
@@ -85,7 +85,7 @@ class UnitController:
         """Asks systemd to start or restart a UBI service.
 
         Args:
-            unit_name (str): The exact unit name, such as "zerodha@quotes.service".
+            unit_name (str): The exact unit name, such as "zerodha-instruments@websocket_quotes.service".
             action (str): "start" or "restart".
             address (str): The network address of the browser that asked, for the audit trail.
 

@@ -22,7 +22,7 @@ class TestQuotesPipelineCollector:
         inventory = FakeUnitInventory(
             {
                 'unified': [
-                    'unified@quotes.service',
+                    'unified-instruments@websocket_quotes.service',
                 ],
             },
         )

@@ -97,7 +97,7 @@ class BaseCollector:
         """Builds a result in this collector's area.
 
         Args:
-            identifier (str): The part of the check id after the area, such as "zerodha@quotes.service".
+            identifier (str): The part of the check id after the area, such as "zerodha-instruments@websocket_quotes.service".
             subject (str): The broker name, "unified" or "platform".
             label (str): The short human label.
             status (CheckStatus): The judgement.

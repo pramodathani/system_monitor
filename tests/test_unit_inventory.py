@@ -35,7 +35,7 @@ class TestUnitInventory:
                 'list-dependencies',
                 'zerodha.target',
             ],
-            'zerodha.target\n  zerodha-historical-prices.service\n  zerodha-login.service\n  zerodha-login.timer\n  zerodha@quotes.service\n',
+            'zerodha.target\n  zerodha-historical-prices.service\n  zerodha-login.service\n  zerodha-login.timer\n  zerodha-instruments@websocket_quotes.service\n',
         )
         runner.add_response(
             [
@@ -96,7 +96,7 @@ class TestUnitInventory:
         assert inventory.find('zerodha-login.timer').kind == UnitKind.TIMER
         assert inventory.find('zerodha-login.service').kind == UnitKind.SCHEDULED
         assert inventory.find('zerodha-historical-prices.service').kind == UnitKind.PERIODIC
-        assert inventory.find('zerodha@quotes.service').kind == UnitKind.LONG_RUNNING
+        assert inventory.find('zerodha-instruments@websocket_quotes.service').kind == UnitKind.LONG_RUNNING
         assert inventory.find('unified-rest-api.service').subject == 'unified'
 
     def test_refresh_keeps_database_units(self, tmp_path):
@@ -131,6 +131,17 @@ class TestUnitInventory:
             AssertionError: A partial or foreign name matched.
         """
         inventory = self._inventory(tmp_path)
-        assert inventory.has_unit('zerodha@quotes.service')
-        assert not inventory.has_unit('zerodha@quotes')
+        assert inventory.has_unit('zerodha-instruments@websocket_quotes.service')
+        assert not inventory.has_unit('zerodha-instruments@websocket_quotes')
         assert not inventory.has_unit('ssh.service')
+
+    def test_has_script_names_the_template_unit(self, tmp_path):
+        """Checks that a script is found through its subject and folder.
+
+        Raises:
+            AssertionError: A script that runs was not found, or one that does not was.
+        """
+        inventory = self._inventory(tmp_path)
+        assert inventory.has_script('zerodha', 'instruments', 'websocket_quotes')
+        assert not inventory.has_script('zerodha', 'portfolio', 'holdings')
+        assert not inventory.has_script('unified', 'instruments', 'websocket_quotes')

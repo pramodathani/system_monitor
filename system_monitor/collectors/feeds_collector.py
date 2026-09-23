@@ -76,7 +76,7 @@ class FeedsCollector(BaseCollector):
         now = self.clock.now()
         results = []
         for subject in self.inventory.subjects():
-            if not self.inventory.has_unit(f'{subject}@quotes.service'):
+            if not self.inventory.has_script(subject, 'instruments', 'websocket_quotes'):
                 continue
             results.append(self._judge(subject, now))
         return results

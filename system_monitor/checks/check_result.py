@@ -50,7 +50,7 @@ class CheckResult:
     """One check's latest judgement.
 
     Attributes:
-        check_id: A stable identifier, such as "services:zerodha@quotes.service".
+        check_id: A stable identifier, such as "services:zerodha-instruments@websocket_quotes.service".
         area: The dashboard area the check belongs to.
         subject: The broker name, "unified", or "platform" for shared infrastructure.
         name: A short human label, such as "Quote feed".

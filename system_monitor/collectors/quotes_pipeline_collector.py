@@ -1,6 +1,6 @@
 """Checks the unified quotes pipeline: its statistics heartbeat and stale live quotes.
 
-`bin/unified/quotes` writes `unified:quotes:stats` every ten seconds with running counters. The collector turns the counters into rates, and every half minute it scans `unified:quotes:live` for quotes marked stale while their market is open.
+`bin/unified/instruments/websocket_quotes` writes `unified:quotes:stats` every ten seconds with running counters. The collector turns the counters into rates, and every half minute it scans `unified:quotes:live` for quotes marked stale while their market is open.
 
 Typical usage example:
 
@@ -71,7 +71,7 @@ class QuotesPipelineCollector(BaseCollector):
             redis.RedisError: Redis could not be read.
             ValueError: The statistics document is not JSON.
         """
-        if not self.inventory.has_unit('unified@quotes.service'):
+        if not self.inventory.has_script(UNIFIED_SUBJECT, 'instruments', 'websocket_quotes'):
             return []
         now = self.clock.now()
         results = [
@@ -101,7 +101,7 @@ class QuotesPipelineCollector(BaseCollector):
                 UNIFIED_SUBJECT,
                 label,
                 CheckStatus.FAILURE,
-                f'{_STATS_KEY} is missing; bin/unified/quotes has not written statistics.',
+                f'{_STATS_KEY} is missing; bin/unified/instruments/websocket_quotes has not written statistics.',
             )
         written_at = stats.get('at')
         age = None
@@ -126,7 +126,7 @@ class QuotesPipelineCollector(BaseCollector):
         if age is None or age > self.thresholds.stats_failure_age_seconds:
             age_text = 'of unknown age' if age is None else f'{TextFormatter.duration(age)} old'
             status = CheckStatus.FAILURE
-            message = f'The pipeline statistics are {age_text}; bin/unified/quotes may be stuck.'
+            message = f'The pipeline statistics are {age_text}; bin/unified/instruments/websocket_quotes may be stuck.'
         elif undecodable_increase > 0:
             status = CheckStatus.WARNING
             message = f'{TextFormatter.count(undecodable_increase, "tick")} could not be decoded since the last reading.'

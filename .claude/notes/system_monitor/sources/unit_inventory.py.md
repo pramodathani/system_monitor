@@ -14,6 +14,12 @@ On 2026-09-19 UBI added `services/databases/`, holding `databases.target`, `data
 
 `databases` therefore stays in `subjects()`, so its units are watched and the Services page still lists them with their start and restart buttons, but it is left out of `brokers()`. Filing the units under the `platform` subject, next to the Docker container checks, was considered and rejected: the front end hides `platform` from the per-subject lists on the Services and Overview pages, so the units would have disappeared from the dashboard.
 
+## Why `has_script` exists
+
+On 2026-09-22 UBI regrouped every broker's scripts into folders by subject (`session/`, `user/`, `orders/`, `portfolio/`, `instruments/`) and renamed the systemd templates to match, so `zerodha@orders.service` became `zerodha-orders@api_order_details.service` and `unified@quotes.service` became `unified-instruments@websocket_quotes.service`. Three collectors decide whether to run a check by asking whether the script that writes a Redis key exists as a unit, and each had spelled the old name out for itself. Every one of those lookups silently returned false after the rename, so the feeds, quotes pipeline and portfolio freshness collectors produced no checks at all, which looks on the dashboard exactly like a system with nothing to report.
+
+`has_script(subject, folder, script)` builds the name `<subject>-<folder>@<script>.service` in one place, so the next time UBI changes the spelling there is a single method to correct rather than a dozen string literals spread across collectors.
+
 ## The unit kinds
 
 | Kind | Rule | Why it matters |

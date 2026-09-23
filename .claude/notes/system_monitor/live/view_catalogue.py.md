@@ -8,7 +8,7 @@ The chosen broker is checked the same way, against `UnitInventory.brokers()`, be
 
 ## Why the unified session status tab looks empty
 
-`unified:session:status` is written by `bin/unified/login`, and on this system that script has never run, so the key does not exist. The application token the REST API actually authenticates with lives in the `last_login` hash under the field `unified_broker_interface`, written by the REST API's own connect.
+`unified:session:status` is written by `bin/unified/session/connect`, and on this system that script has never run, so the key does not exist. The application token the REST API actually authenticates with lives in the `last_login` hash under the field `unified_broker_interface`, written by the REST API's own connect.
 
 Both are shown. The session status tab is kept because it is the key the user asked for and its absence is itself worth seeing, and the application token tab is beside it so the page is not simply blank where the token should be.
 

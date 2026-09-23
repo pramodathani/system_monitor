@@ -8,7 +8,7 @@ A unit may be acted on only if all of these hold:
 - the name ends in `.service` (timers are managed by systemd's schedule, and restarting a timer does not run its job);
 - the exact name is a member of one of UBI's targets, as found by `UnitInventory`.
 
-The name is compared exactly and passed to `systemctl` as a separate argument without a shell, so names such as `zerodha@quotes.service; rm -rf ~` are refused by the allow-list and could not be interpreted as shell syntax anyway. The test `test_perform_rejects_units_outside_inventory_and_timers` covers this.
+The name is compared exactly and passed to `systemctl` as a separate argument without a shell, so names such as `zerodha-instruments@websocket_quotes.service; rm -rf ~` are refused by the allow-list and could not be interpreted as shell syntax anyway. The test `test_perform_rejects_units_outside_inventory_and_timers` covers this.
 
 ## Starting a login job
 

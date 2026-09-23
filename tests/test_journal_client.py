@@ -23,7 +23,7 @@ class TestJournalClient:
             {
                 '__CURSOR': cursor,
                 '__REALTIME_TIMESTAMP': '1789436180591829',
-                '_SYSTEMD_USER_UNIT': 'zerodha@quotes.service',
+                '_SYSTEMD_USER_UNIT': 'zerodha-instruments@websocket_quotes.service',
                 'SYSLOG_IDENTIFIER': 'zerodha-quotes',
                 'MESSAGE': message,
             },
@@ -36,7 +36,7 @@ class TestJournalClient:
             AssertionError: A field is wrong.
         """
         entry = JournalClient(FakeCommandRunner()).parse_line(self._line('hello'))
-        assert entry.unit == 'zerodha@quotes.service'
+        assert entry.unit == 'zerodha-instruments@websocket_quotes.service'
         assert entry.identifier == 'zerodha-quotes'
         assert entry.message == 'hello'
         assert entry.timestamp == 1789436180.591829

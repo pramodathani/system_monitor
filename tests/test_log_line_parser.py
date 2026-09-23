@@ -2,7 +2,7 @@
 
 from system_monitor.sources.log_line_parser import LogLineParser
 
-_UNIT = 'zerodha@quotes.service'
+_UNIT = 'zerodha-instruments@websocket_quotes.service'
 
 
 class TestLogLineParser:
